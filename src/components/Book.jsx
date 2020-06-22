@@ -1,46 +1,92 @@
 import React, { Component } from 'react';
-import { Card, Button, Col } from 'react-bootstrap';
+import { 
+    Card, 
+    CardActions, 
+    CardActionArea, 
+    CardMedia, 
+    CardContent, 
+    Typography, 
+    Button 
+} from '@material-ui/core';
 import '../App.css';
+import { withStyles } from '@material-ui/styles';
 
-export default class Book extends Component {
-    
-    handleNewTab = (e) => {
-        let info = window.open(e.target.value, '_blank');
+const useStyles = () => ({
+    root: {
+        maxWidth: 345,
+        margin: 15,
+    },
+    media: {
+        height: 260,
+        width: 380,
+    },
+    description: {
+        overflow: "hidden", 
+        textOverflow: "ellipsis", 
+        width: '20rem', 
+        height:'8rem',
+    },
+  });
+
+
+class Book extends Component {
+        
+    handleNewTab = (link) => {
+        let info = window.open(link, '_blank');
         info.focus();
     };
 
-    render() {
-        const style = {
-            cardText: {
-                color: 'black',
-                whiteSpace:'nowrap',
-                textOverflow:'ellipsis',
-                overflow: 'hidden',
-                maxHeight:'150px',
-                maxWidth:'200px',
-                fontSize: '10px'
-            }
-        };
-        const {b} = this.props;
-        return (
-            <Col sm='4'>
-                <Card style={{ width: '200px', height: '270px' }}>
-                    {b.volumeInfo.imageLinks ? (
-                        <Card.Img 
-                        style={{marginTop:'25px', alignSelf:'center',maxWidth:'20%', width:'auto', height:'auto'}} 
-                        src={b.volumeInfo.imageLinks.smallThumbnail} 
-                    />) : <p>No image</p>}
-                    <Card.Body>
-                    <Card.Title style={{height: '20px', fontSize:'10px'}}>{b.volumeInfo.title}</Card.Title>
-                    <Card.Text style={style.cardText}>
-                        {b.volumeInfo.description}
-                    </Card.Text>
-                    <p style={{fontSize:'10px', color:'blue'}}>Categories: {b.volumeInfo.categories ? b.volumeInfo.categories : 'Not Available'} </p>
+    handelDescription=(text)=>{
+        let ellipsis ='...';
+        return text.substring(0, 200).concat(ellipsis);
+    };
 
-                    <Button variant="primary" value={b.volumeInfo.infoLink} onClick={this.handleNewTab}>More Book Info</Button>
-                    </Card.Body>
-                </Card>
-            </Col>
+    render() {
+        
+        const {b} = this.props;
+        const {classes} = this.props;
+        
+        return (
+            <Card className={classes.root}>
+                <CardActionArea>
+                    <CardMedia
+                        className={classes.media}
+                        image={b.volumeInfo.imageLinks 
+                            ? b.volumeInfo.imageLinks.thumbnail 
+                            : require('../resources/noImageAvail.png')}
+                        title={b.volumeInfo.title}
+                    />
+                    <CardContent>
+                        
+                        <Typography gutterBottom={true} variant="h5" component="h2"> 
+                            {b.volumeInfo.title}
+                        </Typography>
+                        
+                        <div className={classes.description}> 
+                        <Typography variant="body2" color="textSecondary" component="span">
+                            <section><b>Description: </b></section>{b.volumeInfo.description 
+                                ? this.handelDescription(b.volumeInfo.description) 
+                                : 'No Description Avail.'}
+                        </Typography></div>
+                        <Typography variant='body2' color='textSecondary' component='span'>
+                            <section><b>Categories: </b></section>{b.volumeInfo.categories 
+                                ? b.volumeInfo.categories 
+                                : 'Not Available.'}
+                        </Typography>
+                    </CardContent>
+                </CardActionArea>
+                <CardActions>
+                    <Button 
+                        variant='contained' 
+                        color="primary" 
+                        onClick={()=>this.handleNewTab(b.volumeInfo.infoLink)}
+                    >
+                        More Info...
+                    </Button>
+                </CardActions>
+            </Card>    
         )
     };
 };
+
+export default withStyles(useStyles)(Book)

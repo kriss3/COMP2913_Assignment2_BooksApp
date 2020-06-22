@@ -2,11 +2,41 @@ import React, {Component} from "react";
 import Book from "./components/Book";
 import Search from "./components/Search";
 import axios from 'axios';
-import {Container, Row, Spinner } from 'react-bootstrap';
+import { withStyles } from '@material-ui/core/styles';
+import { Grid, CircularProgress, Divider, Paper } from '@material-ui/core';
 
 import './App.css';
 
-export default class App extends Component {
+const useStyles = (theme) =>({
+  root: {
+    flexGrow: 1,
+    backgroundColor:'#282c34',
+  },
+  paper:{
+    backgroundColor:'#282c34'
+  },
+  control: {
+    padding: theme.spacing(2),
+  },
+  spinner: {
+    textAlign: 'center', 
+    backgroundColor:'#282c34', 
+    height: '700px', 
+    padding:'100px'
+  },
+  noBooks: {
+    textAlign: 'center',
+    color: 'yellowgreen'
+  },
+  errorPhrase: {
+    color: 'red',
+    display: 'inline',
+    margin: 5,
+    fontStyle: 'italic'
+  }
+});
+
+class App extends Component {
   constructor(props){
     super(props);
     this.state = {
@@ -23,6 +53,7 @@ export default class App extends Component {
     });
   };
 
+  //delaying fetch data to clearly show progress component
   getData = (phrase) => {
     this.setState({isLoading: true, defaultSearch: phrase}, ()=>{
       axios.get(`https://www.googleapis.com/books/v1/volumes?q=${phrase}`)
@@ -32,50 +63,67 @@ export default class App extends Component {
               books: response.data.items, 
               isLoading: false
             });
-          }, 3000))
+          }, 2000))
         .catch((error) => this.handleError(error));
     });
   };
 
   handleError = (response) => {
-    console.log('in handleError: ' + JSON.stringify(response));
     this.setState({isLoading: false, errorMessage: response.message});
   };
 
   handleSearch = (phrase) => {
-    console.log(`We are looking for ${phrase}`);
     this.getData(phrase);
   }; 
 
   render(){
-    let book;
-    this.state.books && (
-      book = this.state.books.map((b) => {
+    let book = this.state.books && (
+      this.state.books.map((b) => {
         return(
           <Book key={b.id} b={b}/>
         )
       })
     )
 
+    const { classes } = this.props;
+
     return (
       <>
         <div className='App-search'>
           <Search 
-            searchPhrase={this.state.booksToSearch} 
+            searchPhrase={this.state.defaultSearch} 
             searchClickBtn={this.handleSearch}
           /> 
         </div>
-        <hr/>
-
-        {this.state.isLoading ? <div style={{textAlign: 'center', backgroundColor:'#282c34', height: '700px', padding:'100px'}}><Spinner animation="border" variant='danger' /></div> : (
-          <Container fluid className='App-header'>
-            {this.state.errorMessage !== '' || !this.state.books ? (<p>No Books found for phrase: {this.state.defaultSearch}<br/>{this.state.errorMessage}</p>) : (
-            <Row sm='2'>
-              {book}
-            </Row> )}
-          </Container> 
-        )}
+        <Divider/>
+        
+        {this.state.isLoading ? (
+          <div className={classes.spinner}>
+            <CircularProgress color='secondary' />
+          </div>) : (
+            <Grid container alignItems='stretch' className={classes.root} spacing={2}>
+              <Grid item sm={12}>
+                <Paper className={classes.paper}>
+                {this.state.errorMessage !== '' || !this.state.books
+                  ? (<h3 className={classes.noBooks}>
+                        No Books found for phrase:  
+                        <p className={classes.errorPhrase}>
+                          {this.state.defaultSearch}
+                        </p>
+                        <p>{this.state.errorMessage}</p>
+                      </h3>)
+                  : (
+                    <Grid container justify="center" spacing={2}>
+                      {book}
+                    </Grid>)}
+                </Paper>
+              </Grid>
+            </Grid>
+          )
+        }
       </>
     );
   }
 };
+
+export default withStyles(useStyles)(App);
